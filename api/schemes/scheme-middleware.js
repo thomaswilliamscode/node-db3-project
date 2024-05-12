@@ -1,3 +1,5 @@
+const db = require('../../data/db-config')
+
 /*
   If `scheme_id` does not exist in the database:
 
@@ -19,7 +21,7 @@ const checkSchemeId = (req, res, next) => {
   }
 */
 const validateScheme = (req, res, next) => {
-
+  next()
 }
 
 /*
@@ -31,8 +33,22 @@ const validateScheme = (req, res, next) => {
     "message": "invalid step"
   }
 */
-const validateStep = (req, res, next) => {
+const validateStep = async (req, res, next) => {
+  const { step_number, } = req.body.step
+  const { scheme_id } = req.params;
+  const data = await db('steps')
+		.where('scheme_id', scheme_id)
+		.where('step_number', step_number);
 
+    const length = data.length
+
+    if(length) {
+      console.log('isTaken: ', data)
+      res.status(400).json({message: 'That Step number is taken'})
+    } else {
+      console.log('made it past middleware')
+      next();
+    }
 }
 
 module.exports = {

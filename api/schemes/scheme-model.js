@@ -53,8 +53,6 @@ async function findById(scheme_id) { // EXERCISE B
       .where('sc.scheme_id', scheme_id)
       .orderBy('st.step_number', 'asc');
 
-      return rows
-
       /*
 
 
@@ -103,6 +101,39 @@ async function findById(scheme_id) { // EXERCISE B
         ]
       }
 
+      */
+    let scheme_name = rows[0].scheme_name
+    let steps = []
+
+    let result = rows.map( (row) => {
+      if(row.step_number) {
+				let answer = {
+					step_id: row.step_id,
+					step_number: row.step_number,
+					instructions: row.instructions,
+				};
+				steps.push(answer);
+			}
+      })
+      // "scheme_id": 1,
+      //   "scheme_name": "World Domination",
+      //   "steps": [
+      //     {
+      //       "step_id": 2,
+      //       "step_number": 1,
+      //       "instructions": "solve prime number theory"
+      //     },
+
+      let info = {
+        scheme_id: scheme_id,
+        scheme_name: scheme_name,
+        steps: steps
+      }
+
+      return info
+
+      /*
+
     5B- This is what the result should look like _if there are no steps_ for a `scheme_id`:
 
       {
@@ -113,8 +144,9 @@ async function findById(scheme_id) { // EXERCISE B
   */
 }
 
-function findSteps(scheme_id) { // EXERCISE C
-  /*
+async function findSteps(scheme_id) {
+	// EXERCISE C
+	/*
     1C- Build a query in Knex that returns the following data.
     The steps should be sorted by step_number, and the array
     should be empty if there are no steps for the scheme:
@@ -133,21 +165,89 @@ function findSteps(scheme_id) { // EXERCISE C
           "scheme_name": "Get Rich Quick"
         }
       ]
+
+      select
+    st.step_id,
+    st.step_number,
+    st.instructions,
+    sc.scheme_name
+from schemes as sc
+left join steps as st
+    on sc.scheme_id = st.scheme_id
+where sc.scheme_id = 1
+order by st.step_number;
   */
+
+const rows = await db('schemes as sc')
+      .select('st.step_id', 'st.step_number', 'st.instructions', 'sc.scheme_name')
+      .leftJoin('steps as st', 'sc.scheme_id', 'st.scheme_id')
+      .where('sc.scheme_id', scheme_id)
+      .orderBy('st.step_number')
+
+
+if (rows[0].step_id) {
+  return rows
+} else {
+  return []
+}
 }
 
-function add(scheme) { // EXERCISE D
-  /*
+
+async function add(scheme) {
+  let {scheme: realScheme} = scheme
+	// EXERCISE D
+	/*
     1D- This function creates a new scheme and resolves to _the newly created scheme_.
+    insert into schemes (scheme_name)
+    values('test');
   */
+  const rows = await db('schemes')
+    .insert({
+      scheme_name: realScheme
+    })
+
+    const newScheme = await db('schemes')
+      .where('scheme_id', rows[0])
+
+    return newScheme[0];
 }
 
-function addStep(scheme_id, step) { // EXERCISE E
+async function addStep(scheme_id, step) {
+  console.log('inside add a step')
+  const { step_number, instructions } = step.step
+	// EXERCISE E
+	/*
+  step is obj with step_number, instructions
+  linked with scheme_id
+
+
+  insert into steps (step_number, instructions, scheme_id)
+  values(1, 'This is a test', 8);
+
+  */
+
+  const newStep = await db('steps')
+    .insert({
+      step_number: step_number,
+      instructions: instructions,
+      scheme_id: scheme_id
+    })
+
   /*
+
     1E- This function adds a step to the scheme with the given `scheme_id`
     and resolves to _all the steps_ belonging to the given `scheme_id`,
     including the newly created one.
   */
+ console.log('newStep: ', newStep)
+
+    const allSteps = await db('steps')
+      .where('scheme_id', scheme_id)
+      .orderBy('step_number')
+
+      console.log('allSteps: ', allSteps)
+
+      return allSteps
 }
 
 module.exports = {
