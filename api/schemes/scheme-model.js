@@ -102,7 +102,13 @@ async function findById(scheme_id) { // EXERCISE B
       }
 
       */
-    let scheme_name = rows[0].scheme_name
+      let scheme_name;
+      let length = rows.length
+
+    if (length) {
+      scheme_name = rows[0].scheme_name;
+		}
+    
     let steps = []
 
     let result = rows.map( (row) => {
@@ -123,6 +129,9 @@ async function findById(scheme_id) { // EXERCISE B
       //       "step_number": 1,
       //       "instructions": "solve prime number theory"
       //     },
+      if(typeof scheme_id === 'string') {
+        scheme_id = parseInt(scheme_id)
+      }
 
       let info = {
         scheme_id: scheme_id,
@@ -194,7 +203,7 @@ if (rows[0].step_id) {
 
 
 async function add(scheme) {
-  let {scheme: realScheme} = scheme
+  let {scheme_name} = scheme
 	// EXERCISE D
 	/*
     1D- This function creates a new scheme and resolves to _the newly created scheme_.
@@ -203,7 +212,7 @@ async function add(scheme) {
   */
   const rows = await db('schemes')
     .insert({
-      scheme_name: realScheme
+      scheme_name: scheme_name
     })
 
     const newScheme = await db('schemes')
@@ -214,7 +223,7 @@ async function add(scheme) {
 
 async function addStep(scheme_id, step) {
   console.log('inside add a step')
-  const { step_number, instructions } = step.step
+  const { step_number, instructions } = step
 	// EXERCISE E
 	/*
   step is obj with step_number, instructions
@@ -239,13 +248,10 @@ async function addStep(scheme_id, step) {
     and resolves to _all the steps_ belonging to the given `scheme_id`,
     including the newly created one.
   */
- console.log('newStep: ', newStep)
 
     const allSteps = await db('steps')
       .where('scheme_id', scheme_id)
       .orderBy('step_number')
-
-      console.log('allSteps: ', allSteps)
 
       return allSteps
 }
